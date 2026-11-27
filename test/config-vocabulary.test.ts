@@ -491,7 +491,7 @@ describe('what a key is allowed to hold, scoped to the element', () => {
     expect(out.specials_values!.filterSource.values).toContain('sort');
     expect(out.specials_values!.filterArity.values).toContain('');
     expect(JSON.stringify(traitsFor('filter-checkbox')).length).toBeLessThan(16_000);
-    expect(JSON.stringify(traitsFor('list-dataset')).length).toBeLessThan(16_000);
+    expect(JSON.stringify(traitsFor('list-dataset')).length).toBeLessThan(17_000); // see token-budget.test.ts
   });
 });
 

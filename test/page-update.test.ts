@@ -90,6 +90,23 @@ describe('sb_page_update', () => {
       await close();
     }
   });
+  it('tag pages take render_for — linkType productTag / blogTag (page/entitylinks.go)', async () => {
+    for (const [type, linkType] of [['product-tag', 'productTag'], ['blog-tag', 'blogTag']] as const) {
+      const fake = fakePlatform((method, path) =>
+        path === '/api/sites/s1/pages/pt' ? { page: { id: 'pt', type, settings: {} } } : undefined,
+      );
+      const { call, close } = await fake.connect();
+      try {
+        const r = await call('sb_page_update', { site_id: 's1', page_id: 'pt', render_for: ['t1'] });
+        expect(r.isError, r.text).toBe(false);
+        expect(r.json.would_send).toEqual([
+          { method: 'POST', path: '/api/sites/s1/page-links/bulk', body: { linkType, linkIds: ['t1'], pageId: 'pt' } },
+        ]);
+      } finally {
+        await close();
+      }
+    }
+  });
   it('a brand page takes render_for — linkType "brand", as Go linkTypeForPageType (page/entitylinks.go)', async () => {
     const fake = fakePlatform((method, path) =>
       path === '/api/sites/s1/pages/pb' ? { page: { id: 'pb', type: 'brand', settings: {} } } : undefined,

@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { layoutForPageName, USUAL_PAGES } from '../src/domains/site/inventory.js';
-import { layoutDocument, layoutNames } from '../src/domains/site/storepage.js';
+import { ENTITY_LISTS, entityRoute, layoutDocument, layoutNames } from '../src/domains/site/storepage.js';
+import { PAGE_TYPES } from '../src/catalog/storepages.generated.js';
+import { API_OPERATIONS } from '../src/catalog/api.generated.js';
 import { connectedClient } from './harness.js';
 import { Session } from '../src/transport/auth.js';
 import { Notices } from '../src/mcp/notices.js';
@@ -186,6 +188,33 @@ describe('sb_page_create opens a content page as something', () => {
     expect(String((await create(platform().f, { site_id: 's1', name: 'B', type: 'brand' })).next)).toContain('500');
   });
 
+  // TAG PAGES ARE SEEDED (storePageSeeds.ts 'product-tag' / 'blog-tag'): a title
+  // plus a shelf already narrowed to the routed tag. The generator's hand list
+  // of six seeded types dropped them, so they opened empty and 500'd.
+  it('opens a tag page with its title and a shelf narrowed to the routed tag', async () => {
+    for (const [type, bound, narrow] of [
+      ['product-tag', 'productTag.title', '"collectionType":"page_tag"'],
+      ['blog-tag', 'blogTag.title', '"articleSourceType":"page_tag"'],
+    ] as const) {
+      const h = platform();
+      const body = await create(h.f, { site_id: 's1', name: 'Tag', type, chrome: false, dry_run: false });
+      expect(body.next, type).toBeUndefined();
+      const put = JSON.stringify(h.calls.find((c) => c.method === 'PUT' && c.path.endsWith('/source'))?.body ?? null);
+      expect(put, type).toContain(bound);
+      expect(put, type).toContain(narrow);
+    }
+  });
+
+  it('tells a blank tag page how to narrow its list to the tag', async () => {
+    const p = await create(platform().f, { site_id: 's1', name: 'T', type: 'product-tag', seed: false, chrome: false, dry_run: false });
+    expect(String(p.next)).toContain('/product-tags/{slug}');
+    expect(String(p.next)).toContain('productTag.title');
+    expect(String(p.next)).toContain('collectionType "page_tag"');
+    const b = await create(platform().f, { site_id: 's1', name: 'T', type: 'blog-tag', seed: false, chrome: false, dry_run: false });
+    expect(String(b.next)).toContain('/blog-tags/{slug}');
+    expect(String(b.next)).toContain('articleSourceType "page_tag"');
+  });
+
   it('says the same of a seeded entity type created blank, and nothing of a seeded one', async () => {
     const blank = await create(platform().f, { site_id: 's1', name: 'SP', type: 'product', seed: false, chrome: false, dry_run: false });
     expect(String(blank.next)).toContain('product.title');
@@ -195,5 +224,22 @@ describe('sb_page_create opens a content page as something', () => {
     // not an entity template at all: no URL family to break
     const plain = await create(platform().f, { site_id: 's1', name: 'Quà tặng', chrome: false, dry_run: false });
     expect(plain.next).toBeUndefined();
+  });
+});
+
+// sb_publish verify fetches ONE real record of an entity template's type from
+// ENTITY_LISTS. A {slug} type with no row there verifies the template's own slug,
+// which answers 200 unbound and proves nothing (TTG gap #68).
+describe('ENTITY_LISTS', () => {
+  it('names a real list route for brand and both tag templates', () => {
+    const templates = PAGE_TYPES.filter((t) => entityRoute(t.type)).map((t) => t.type);
+    expect(templates, 'tag types parsed').toEqual(expect.arrayContaining(['product-tag', 'blog-tag']));
+    for (const type of ['product-tag', 'blog-tag', 'brand']) {
+      const list = ENTITY_LISTS[type];
+      expect(list, type).toBeDefined();
+      expect(API_OPERATIONS.some((o) => o.id === `get:/api/sites/{siteId}/${list.path}`), `${type} → ${list.path}`).toBe(true);
+    }
+    expect(ENTITY_LISTS['product-tag']).toEqual({ path: 'product-tags', keys: ['tags'] });
+    expect(ENTITY_LISTS['blog-tag']).toEqual({ path: 'article-tags', keys: ['tags'] });
   });
 });

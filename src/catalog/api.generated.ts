@@ -3,9 +3,9 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 1016,
-  "definitions": 445,
-  "bodyCarrying": 493,
+  "operations": 1026,
+  "definitions": 449,
+  "bodyCarrying": 503,
   "bodyUndescribed": 122,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
@@ -5997,6 +5997,195 @@ export const API_OPERATIONS: ApiOperation[] = [
     ],
     "bodyDescribed": false,
     "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/article-tags",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/article-tags",
+    "tags": [
+      "blog"
+    ],
+    "summary": "List or create article tags",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      },
+      {
+        "name": "tag",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Tag to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_blog.Tag",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/article-tags",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/article-tags",
+    "tags": [
+      "blog"
+    ],
+    "summary": "List or create article tags",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      },
+      {
+        "name": "tag",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Tag to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_blog.Tag",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/article-tags/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/article-tags/{id}",
+    "tags": [
+      "blog"
+    ],
+    "summary": "Get, update or delete an article tag",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Tag ID"
+      },
+      {
+        "name": "tag",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Updated tag (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_blog.Tag",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/article-tags/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/article-tags/{id}",
+    "tags": [
+      "blog"
+    ],
+    "summary": "Get, update or delete an article tag",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Tag ID"
+      },
+      {
+        "name": "tag",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Updated tag (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_blog.Tag",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/article-tags/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/article-tags/{id}",
+    "tags": [
+      "blog"
+    ],
+    "summary": "Get, update or delete an article tag",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Tag ID"
+      },
+      {
+        "name": "tag",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Updated tag (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_blog.Tag",
     "credential": "siteScoped"
   },
   {
@@ -22932,6 +23121,195 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/sites/{siteId}/product-tags",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/product-tags",
+    "tags": [
+      "products"
+    ],
+    "summary": "List or create product tags",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      },
+      {
+        "name": "tag",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Tag to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_products.ProductTag",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "post:/api/sites/{siteId}/product-tags",
+    "method": "POST",
+    "path": "/api/sites/{siteId}/product-tags",
+    "tags": [
+      "products"
+    ],
+    "summary": "List or create product tags",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page size (max 200)"
+      },
+      {
+        "name": "offset",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page offset"
+      },
+      {
+        "name": "tag",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Tag to create (POST only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_products.ProductTag",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{siteId}/product-tags/{id}",
+    "method": "GET",
+    "path": "/api/sites/{siteId}/product-tags/{id}",
+    "tags": [
+      "products"
+    ],
+    "summary": "Get, update or delete a product tag",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Tag ID"
+      },
+      {
+        "name": "tag",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Updated tag (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_products.ProductTag",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/sites/{siteId}/product-tags/{id}",
+    "method": "PUT",
+    "path": "/api/sites/{siteId}/product-tags/{id}",
+    "tags": [
+      "products"
+    ],
+    "summary": "Get, update or delete a product tag",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Tag ID"
+      },
+      {
+        "name": "tag",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Updated tag (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_products.ProductTag",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "delete:/api/sites/{siteId}/product-tags/{id}",
+    "method": "DELETE",
+    "path": "/api/sites/{siteId}/product-tags/{id}",
+    "tags": [
+      "products"
+    ],
+    "summary": "Get, update or delete a product tag",
+    "params": [
+      {
+        "name": "siteId",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Site ID"
+      },
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "Tag ID"
+      },
+      {
+        "name": "tag",
+        "in": "body",
+        "required": false,
+        "type": "object",
+        "description": "Updated tag (PUT only)"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "github_com_webbuilder_server_internal_products.ProductTag",
+    "credential": "siteScoped"
+  },
+  {
     "id": "get:/api/sites/{siteId}/products",
     "method": "GET",
     "path": "/api/sites/{siteId}/products",
@@ -22988,6 +23366,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "integer",
         "description": "Page offset"
+      },
+      {
+        "name": "tagId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only products linked to this product tag"
       },
       {
         "name": "product",
@@ -23058,6 +23443,13 @@ export const API_OPERATIONS: ApiOperation[] = [
         "required": false,
         "type": "integer",
         "description": "Page offset"
+      },
+      {
+        "name": "tagId",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Only products linked to this product tag"
       },
       {
         "name": "product",
@@ -32227,6 +32619,77 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "github_com_webbuilder_server_internal_blog.SEO": {
+    "type": "object",
+    "properties": {
+      "canonical": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "keywords": {
+        "type": "string"
+      },
+      "noFollow": {
+        "type": "boolean"
+      },
+      "noIndex": {
+        "type": "boolean"
+      },
+      "ogDesc": {
+        "type": "string"
+      },
+      "ogImage": {
+        "type": "string"
+      },
+      "ogTitle": {
+        "type": "string"
+      },
+      "title": {
+        "type": "string"
+      },
+      "twitterCard": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_blog.Tag": {
+    "type": "object",
+    "properties": {
+      "articleCount": {
+        "description": "ArticleCount is READ-ONLY: how many articles link this tag, filled by\nGetTag/ListTags from one grouped query. Never stored; ignored on write.",
+        "type": "integer"
+      },
+      "createdAt": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "image": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "seo": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_blog.SEO"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "slug": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_codefiles.CodeFile": {
     "type": "object",
     "properties": {
@@ -36546,6 +37009,43 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       "ProductStatusArchived"
     ]
   },
+  "github_com_webbuilder_server_internal_products.ProductTag": {
+    "type": "object",
+    "properties": {
+      "createdAt": {
+        "type": "string"
+      },
+      "description": {
+        "description": "plain text",
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "image": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "productCount": {
+        "description": "ProductCount is READ-ONLY: how many products link to this tag, filled by\nGetTag / ListTags from one grouped pivot read. Never stored.",
+        "type": "integer"
+      },
+      "seo": {
+        "$ref": "#/definitions/github_com_webbuilder_server_internal_products.SEO"
+      },
+      "siteId": {
+        "type": "string"
+      },
+      "slug": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "string"
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_products.SEO": {
     "type": "object",
     "properties": {
@@ -36884,6 +37384,12 @@ export const API_DEFINITIONS: Record<string, unknown> = {
           "$ref": "#/definitions/github_com_webbuilder_server_internal_renderctx.BlogCategoryIn"
         }
       },
+      "blogTags": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_renderctx.TagIn"
+        }
+      },
       "brands": {
         "type": "array",
         "items": {
@@ -36919,6 +37425,13 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "object",
         "additionalProperties": {
           "type": "string"
+        }
+      },
+      "productTags": {
+        "description": "ProductTags / BlogTags are the tags a tag route's item resolves\n(productTag.* / blogTag.*). Their shelves have no derived answer: a\ntag's products and articles replay from the recorded Reads only, and an\nenvelope without them renders the shelf empty (never the catalogue).",
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/github_com_webbuilder_server_internal_renderctx.TagIn"
         }
       },
       "products": {
@@ -36999,7 +37512,7 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         }
       },
       "cssLanes": {
-        "description": "CSSLanes is \"inline\" (default: one <style> bundle) or {\"base\": \"https://…/\"}\n(external <link> lanes served from base + key; lane bytes in the output).",
+        "description": "CSSLanes is \"inline\" (default: one <style> bundle) or {\"base\": \"https://…/\"}\n(external <link> lanes served from base + key; lane bytes in the output).\nEven in base mode a page whose bundle is small is served INLINE (the\nstorefront's inlineCSSMax), and the output then carries no lanes for it:\nonly lanes the page actually links are returned.",
         "type": "array",
         "items": {
           "type": "integer"
@@ -37192,6 +37705,28 @@ export const API_DEFINITIONS: Record<string, unknown> = {
         "type": "string"
       },
       "slug": {
+        "type": "string"
+      }
+    }
+  },
+  "github_com_webbuilder_server_internal_renderctx.TagIn": {
+    "type": "object",
+    "properties": {
+      "description": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "image": {
+        "type": "string"
+      },
+      "slug": {
+        "description": "Slug is the tag's own storefront slug — the second segment of\n/product-tags/{slug} or /blog-tags/{slug}, and the ONLY input to `{ns}.url`.",
+        "type": "string"
+      },
+      "title": {
+        "description": "Title is the tag's NAME.",
         "type": "string"
       }
     }

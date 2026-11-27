@@ -1,4 +1,4 @@
-import { ELEMENTS, SATELLITE_RULES } from '../../catalog/elements.generated.js';
+import { ELEMENTS, SATELLITE_RULES, SINGLE_ITEM_SOURCES } from '../../catalog/elements.generated.js';
 import type { NodeSeed } from '../../catalog/element-types.js';
 import { genId } from './ids.js';
 import { recordTileBindings } from './record.js';
@@ -119,8 +119,20 @@ export function bindingsForConfig(
   if (!source) return null;
   // A RECORD tile's source is its `config.recordField`, which no enumerated row
   // can hold — the row supplies the target, `recordTileBindings` the field.
-  const done = (rows: unknown[]) =>
-    source === 'record' ? recordTileBindings(type, config ?? {}, copy(rows)) : (copy(rows) as unknown[]);
+  const done = (rows: unknown[]) => {
+    // A SINGLE-ITEM entity (productTag, blogTag) has no list feed: a repeater
+    // over it renders the whole catalogue under the tag's name on Go. The
+    // editor palette refuses it and the server does not, so refuse it here.
+    const listKind = SINGLE_ITEM_SOURCES[source];
+    if (listKind && JSON.stringify(rows).includes(`"kind":"${listKind}"`)) {
+      throw new Error(
+        `sbuilder: "${source}" is a single-item source — it cannot feed a ${type} (no list of ${source} exists). ` +
+          'On its own page, keep the list on products/articles and narrow it with config.collectionType "page_tag" ' +
+          '(product list) or config.articleSourceType "page_tag" (article list).',
+      );
+    }
+    return source === 'record' ? recordTileBindings(type, config ?? {}, copy(rows)) : (copy(rows) as unknown[]);
+  };
   const exact = table[`${source}|${kind}`];
   if (exact) return done(exact);
   // No kind axis for this source: any row carries the same answer.

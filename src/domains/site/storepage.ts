@@ -133,7 +133,11 @@ export function emptyEntityTemplateNote(type: string | undefined): string | null
     ...(has('description') ? [`a text bound to ${entity}.description`] : []),
     ...(type === 'brand'
       ? ['a product grid narrowed to the brand the URL names: sb_template_use template_id "sb_product_shelf", then sb_set its list-dataset config.collectionType "page_brand" (a bare list-dataset has no card and renders empty)']
-      : []),
+      : type === 'product-tag'
+        ? ['a product grid narrowed to the tag the URL names: sb_template_use template_id "sb_product_shelf", then sb_set its list-dataset config.collectionType "page_tag"']
+        : type === 'blog-tag'
+          ? ['an article list narrowed to the tag the URL names: a list-dataset with config.datasetSource "article" and config.articleSourceType "page_tag"']
+          : []),
   ];
   return (
     `This "${type}" page is EMPTY. Published like that, every ${route} answers 500 ` +
@@ -171,6 +175,10 @@ export const ENTITY_LISTS: Readonly<Record<string, { path: string; keys: readonl
   blog: { path: 'blog-categories', keys: ['blogCategories', 'categories'] },
   course: { path: 'courses', keys: ['courses'] },
   brand: { path: 'product-brands', keys: ['brands'] },
+  // products/rest/tag.go + blog/rest/rest.go: both answer {tags, total}. Not
+  // /blog-tags — that is the distinct-name suggestion list, with no slug.
+  'product-tag': { path: 'product-tags', keys: ['tags'] },
+  'blog-tag': { path: 'article-tags', keys: ['tags'] },
 };
 
 /** A one-line summary of what a seed puts on the page, for the tool result. */

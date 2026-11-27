@@ -36,8 +36,8 @@ describe('traitsFor()', () => {
     // remains is hints, control names, the ways config.animation fails
     // silently, and the 46 type names themselves — which are the one part an
     // agent cannot author an animation without. See token-budget.test.ts for
-    // why this moved and what was trimmed instead.
-    expect(JSON.stringify(t).length).toBeLessThan(16_000);
+    // why this moved and what was trimmed instead (16,000 → 17,000: tag pages).
+    expect(JSON.stringify(t).length).toBeLessThan(17_000);
   });
 
   it('still describes one control in full', () => {

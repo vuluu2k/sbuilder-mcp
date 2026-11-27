@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 468,
-  "shaped": 376,
-  "fromHandlers": 364,
+  "writeOperations": 472,
+  "shaped": 380,
+  "fromHandlers": 368,
   "fromSwaggerOnly": 12,
-  "withReadOnly": 29,
-  "structsRead": 3891
+  "withReadOnly": 31,
+  "structsRead": 3944
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -1307,6 +1307,184 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
     ],
     "source": "go",
     "goType": "blog.Category"
+  },
+  "post:/api/sites/{siteId}/article-tags": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "siteId",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "slug",
+        "type": "string"
+      },
+      {
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "name": "image",
+        "type": "string"
+      },
+      {
+        "name": "seo",
+        "type": "SEO",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "keywords",
+            "type": "string"
+          },
+          {
+            "name": "canonical",
+            "type": "string"
+          },
+          {
+            "name": "ogTitle",
+            "type": "string"
+          },
+          {
+            "name": "ogDesc",
+            "type": "string"
+          },
+          {
+            "name": "ogImage",
+            "type": "string"
+          },
+          {
+            "name": "twitterCard",
+            "type": "string"
+          },
+          {
+            "name": "noIndex",
+            "type": "boolean"
+          },
+          {
+            "name": "noFollow",
+            "type": "boolean"
+          }
+        ]
+      },
+      {
+        "name": "createdAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "updatedAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "articleCount",
+        "type": "number",
+        "note": "ArticleCount is READ-ONLY: how many articles link this tag, filled by GetTag/ListTags from one grouped query."
+      }
+    ],
+    "source": "go",
+    "goType": "blog.Tag"
+  },
+  "put:/api/sites/{siteId}/article-tags/{id}": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "siteId",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "slug",
+        "type": "string"
+      },
+      {
+        "name": "description",
+        "type": "string"
+      },
+      {
+        "name": "image",
+        "type": "string"
+      },
+      {
+        "name": "seo",
+        "type": "SEO",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "keywords",
+            "type": "string"
+          },
+          {
+            "name": "canonical",
+            "type": "string"
+          },
+          {
+            "name": "ogTitle",
+            "type": "string"
+          },
+          {
+            "name": "ogDesc",
+            "type": "string"
+          },
+          {
+            "name": "ogImage",
+            "type": "string"
+          },
+          {
+            "name": "twitterCard",
+            "type": "string"
+          },
+          {
+            "name": "noIndex",
+            "type": "boolean"
+          },
+          {
+            "name": "noFollow",
+            "type": "boolean"
+          }
+        ]
+      },
+      {
+        "name": "createdAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "updatedAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "articleCount",
+        "type": "number",
+        "note": "ArticleCount is READ-ONLY: how many articles link this tag, filled by GetTag/ListTags from one grouped query."
+      }
+    ],
+    "source": "go",
+    "goType": "blog.Tag"
   },
   "post:/api/sites/{siteId}/chat-conversations/{conversationId}/reply": {
     "fields": [
@@ -9959,6 +10137,240 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       "siteId",
       "createdAt",
       "updatedAt"
+    ]
+  },
+  "post:/api/sites/{siteId}/product-tags": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "siteId",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "slug",
+        "type": "string"
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "note": "plain text"
+      },
+      {
+        "name": "image",
+        "type": "string"
+      },
+      {
+        "name": "seo",
+        "type": "SEO",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string",
+            "note": "<title> / meta title"
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "note": "meta description"
+          },
+          {
+            "name": "keywords",
+            "type": "string",
+            "note": "meta keywords (comma-separated)"
+          },
+          {
+            "name": "canonical",
+            "type": "string",
+            "note": "rel=canonical URL; \"\" = self"
+          },
+          {
+            "name": "ogTitle",
+            "type": "string",
+            "note": "Open Graph title; \"\" = fall back to Title"
+          },
+          {
+            "name": "ogDesc",
+            "type": "string",
+            "note": "Open Graph description; \"\" = fall back to Description"
+          },
+          {
+            "name": "ogImage",
+            "type": "string",
+            "note": "Open Graph/social image URL; \"\" = primary product image"
+          },
+          {
+            "name": "twitterCard",
+            "type": "string",
+            "note": "\"summary\" | \"summary_large_image\"; \"\" = default"
+          },
+          {
+            "name": "noIndex",
+            "type": "boolean",
+            "note": "emit robots noindex"
+          },
+          {
+            "name": "noFollow",
+            "type": "boolean",
+            "note": "emit robots nofollow"
+          },
+          {
+            "name": "metaTags",
+            "type": "MetaTag[]",
+            "note": "Advanced (free-form; see the security note above)."
+          },
+          {
+            "name": "jsonld",
+            "type": "string[]",
+            "note": "raw application/ld+json blocks"
+          }
+        ]
+      },
+      {
+        "name": "createdAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "updatedAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "productCount",
+        "type": "number",
+        "note": "ProductCount is READ-ONLY: how many products link to this tag, filled by GetTag / ListTags from one grouped pivot read."
+      }
+    ],
+    "source": "go",
+    "goType": "products.ProductTag",
+    "readOnly": [
+      "id",
+      "siteId",
+      "createdAt",
+      "updatedAt",
+      "productCount"
+    ]
+  },
+  "put:/api/sites/{siteId}/product-tags/{id}": {
+    "fields": [
+      {
+        "name": "id",
+        "type": "string"
+      },
+      {
+        "name": "siteId",
+        "type": "string"
+      },
+      {
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "name": "slug",
+        "type": "string"
+      },
+      {
+        "name": "description",
+        "type": "string",
+        "note": "plain text"
+      },
+      {
+        "name": "image",
+        "type": "string"
+      },
+      {
+        "name": "seo",
+        "type": "SEO",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string",
+            "note": "<title> / meta title"
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "note": "meta description"
+          },
+          {
+            "name": "keywords",
+            "type": "string",
+            "note": "meta keywords (comma-separated)"
+          },
+          {
+            "name": "canonical",
+            "type": "string",
+            "note": "rel=canonical URL; \"\" = self"
+          },
+          {
+            "name": "ogTitle",
+            "type": "string",
+            "note": "Open Graph title; \"\" = fall back to Title"
+          },
+          {
+            "name": "ogDesc",
+            "type": "string",
+            "note": "Open Graph description; \"\" = fall back to Description"
+          },
+          {
+            "name": "ogImage",
+            "type": "string",
+            "note": "Open Graph/social image URL; \"\" = primary product image"
+          },
+          {
+            "name": "twitterCard",
+            "type": "string",
+            "note": "\"summary\" | \"summary_large_image\"; \"\" = default"
+          },
+          {
+            "name": "noIndex",
+            "type": "boolean",
+            "note": "emit robots noindex"
+          },
+          {
+            "name": "noFollow",
+            "type": "boolean",
+            "note": "emit robots nofollow"
+          },
+          {
+            "name": "metaTags",
+            "type": "MetaTag[]",
+            "note": "Advanced (free-form; see the security note above)."
+          },
+          {
+            "name": "jsonld",
+            "type": "string[]",
+            "note": "raw application/ld+json blocks"
+          }
+        ]
+      },
+      {
+        "name": "createdAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "updatedAt",
+        "type": "string (RFC3339)"
+      },
+      {
+        "name": "productCount",
+        "type": "number",
+        "note": "ProductCount is READ-ONLY: how many products link to this tag, filled by GetTag / ListTags from one grouped pivot read."
+      }
+    ],
+    "source": "go",
+    "goType": "products.ProductTag",
+    "readOnly": [
+      "id",
+      "siteId",
+      "createdAt",
+      "updatedAt",
+      "productCount"
     ]
   },
   "post:/api/v1/articles": {

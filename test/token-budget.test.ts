@@ -233,7 +233,13 @@ describe('token budget — a diet without a scale comes back', () => {
     const wire = JSON.stringify(tools);
     expect(wire, 'tools/list re-grew a $schema stamp').not.toContain('"$schema"');
     expect(wire, 'tools/list re-grew a default execution block').not.toContain('"taskSupport":"forbidden"');
-    expect(wire.length).toBeLessThan(42_500);
+    //
+    // 42,500 -> 43,000, measured 42,504 (from ~42,496 — 4 characters of room): the
+    // platform's two tag page types are seeded (web_builder 2819884c2), so
+    // sb_page_create's DERIVED list of seeded types grew by "product-tag, blog-tag"
+    // (+23). sb_page_update's template-type list was cut to "any type with a {slug}
+    // route" (-16) to pay for it; the headroom is restored, not spent.
+    expect(wire.length).toBeLessThan(43_000);
     for (const t of tools) expect(t.description, t.name).not.toMatch(/vanishes on publish/);
     const instructions = client.getInstructions() ?? '';
     expect(instructions.length).toBeGreaterThan(200);
@@ -263,7 +269,13 @@ describe('token budget — a diet without a scale comes back', () => {
     // and real waste, and only the waste was removed. Raised WITH HEADROOM
     // (measured 13,852) rather than to just above today's number, because a
     // ceiling set at the measurement gets raised again without anybody looking.
-    expect(chars(traits)).toBeLessThan(16_000);
+    //   - the third, at 16,445 (from 15,946 — 54 characters of room): the
+    //     platform's tag pages (web_builder 2819884c2). +477 is list-dataset's
+    //     own ai.ts hint saying page_tag narrows a list to the routed tag and a
+    //     tag is never a list source — the one rule that stops a whole-catalogue
+    //     list under a tag's name; +22 is `page_tag` in two vocabularies. Nothing
+    //     here is dilution, so the headroom is restored instead.
+    expect(chars(traits)).toBeLessThan(17_000);
     // The SECOND read says the hints, the animation vocabulary and the two notes
     // once (TTG gap #52): ~15.8 KB first, measured 7,960 after.
     const again = await client.callTool({ name: 'sb_traits_for', arguments: { type: 'list-dataset' } });
@@ -361,7 +373,11 @@ describe('token budget — a diet without a scale comes back', () => {
     // `variants` — `priceCents`, `stock` and `compareAtCents`. The sheet an agent
     // used to create a product was missing the PRICE. Measured 7,398 once the
     // fields came back; the headroom is the paragraph above's argument again.
-    expect(chars(products)).toBeLessThan(8_500);
+    //
+    // 8,500 → 9,000, measured 8,603: the platform's product tags gave the list
+    // a `tagId` filter ("Only products linked to this product tag") — one honest
+    // query param, the sheet's first real growth since the fields came back.
+    expect(chars(products)).toBeLessThan(9_000);
     await close();
   });
 });

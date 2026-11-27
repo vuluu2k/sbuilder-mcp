@@ -224,7 +224,7 @@ describe('sb_traits_for list-dataset stays inside its budget', () => {
     const t = traitsFor('list-dataset') as { inspector: Array<{ groups: Array<{ group: string; controls?: string[]; same_as?: string }> }> };
     const groups = t.inspector.flatMap((x) => x.groups);
     expect(groups.some((g) => g.same_as)).toBe(true);
-    expect(JSON.stringify(t).length).toBeLessThan(16_000);
+    expect(JSON.stringify(t).length).toBeLessThan(17_000); // see token-budget.test.ts
   });
 });
 

@@ -15,9 +15,9 @@ import { PageDoc } from '../src/domains/site/document.js';
  * arrives empty" as though that were the platform's behaviour.
  */
 describe('a store page opens with what the editor gives a merchant', () => {
-  it('seeds the seven store types and leaves an ordinary page blank', () => {
+  it('seeds the nine store types and leaves an ordinary page blank', () => {
     expect(seededTypes().sort()).toEqual(
-      ['account', 'blog', 'category', 'complete', 'post', 'product', 'search'].sort(),
+      ['account', 'blog', 'blog-tag', 'category', 'complete', 'post', 'product', 'product-tag', 'search'].sort(),
     );
     expect(hasSeed('page')).toBe(false);
     expect(hasSeed(undefined)).toBe(false);

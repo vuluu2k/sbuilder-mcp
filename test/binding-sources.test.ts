@@ -48,7 +48,13 @@ describe('the source list is complete enough not to cry wolf', () => {
 // a correct `blogCategory.image` binding dead. They are derived from every
 // *Context function now; this pins the two that slipped through, at both doors.
 describe('every entity context the renderer binds is a source', () => {
-  const ENTITY_KEYS = ['blogCategory.title', 'blogCategory.image', 'brand.title', 'brand.description', 'brand.image'];
+  const ENTITY_KEYS = [
+    'blogCategory.title', 'blogCategory.image', 'brand.title', 'brand.description', 'brand.image',
+    // Built by a namespace-parameterised helper (`tagContext(ns, t)`) — no literal
+    // key in either file, so the literal-key reader dropped them (web_builder 2819884c2).
+    'productTag.title', 'productTag.description', 'productTag.image', 'productTag.url',
+    'blogTag.title', 'blogTag.description', 'blogTag.image', 'blogTag.url',
+  ];
 
   it('lists blogCategory.* and brand.*', () => {
     for (const k of ENTITY_KEYS) expect(BINDING_SOURCES, k).toContain(k);
@@ -64,6 +70,21 @@ describe('every entity context the renderer binds is a source', () => {
     for (const k of ENTITY_KEYS) {
       const { d, id } = headingDoc();
       expect(() => d.apply(bindNode(d, id, k, 'specials.text')), k).not.toThrow();
+    }
+  });
+
+  it('a tag page supplies its own tag, and only its own', () => {
+    for (const [pageType, key, other] of [
+      ['product-tag', 'productTag.title', 'blog-tag'],
+      ['blog-tag', 'blogTag.title', 'product-tag'],
+    ] as const) {
+      const { d, id } = headingDoc();
+      d.apply(bindNode(d, id, key, 'specials.text'));
+      const on = reviewDesign(d, { pageType }).map((f) => f.code);
+      expect(on, `${key} on ${pageType}`).not.toContain('dead_binding_source');
+      expect(on, `${key} on ${pageType}`).not.toContain('no_data_context');
+      expect(reviewDesign(d, { pageType: other }).map((f) => f.code), `${key} on ${other}`).toContain('no_data_context');
+      expect(reviewDesign(d, { pageType: 'page' }).map((f) => f.code), `${key} on page`).toContain('no_data_context');
     }
   });
 

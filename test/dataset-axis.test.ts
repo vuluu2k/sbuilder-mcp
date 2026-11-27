@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { bindingsForConfig, createNode } from '../src/domains/site/node.js';
 import { addSubtree, setKeys } from '../src/domains/site/builder.js';
-import { ELEMENTS } from '../src/catalog/elements.generated.js';
+import { ELEMENTS, SINGLE_ITEM_SOURCES } from '../src/catalog/elements.generated.js';
 import { bindings, emptyDoc, type Bound } from './helpers/doc.js';
 
 /**
@@ -158,5 +158,27 @@ describe('every repeater entity has its binding rows (DATASET_ENTITIES, not a ha
     expect(card).toContain('brand.url');
     expect(card).not.toContain('product');
     expect(JSON.stringify(bindingsForConfig('dataset-block', { datasetSource: 'review' }))).not.toContain('product');
+  });
+
+  // datasetEntities.ts `repeatable: false`: no list feed backs a tag list, and
+  // Go's isProductList reads one as the WHOLE catalogue under the tag's name.
+  it('refuses a tag as a list source, and keeps it as a single-item source', () => {
+    expect(SINGLE_ITEM_SOURCES).toEqual({ productTag: 'product_tag_list', blogTag: 'blog_tag_list' });
+    for (const src of ['productTag', 'blogTag']) {
+      expect(() => bindingsForConfig('list-dataset', { datasetSource: src }), src).toThrow(/single-item source/);
+      const card = JSON.stringify(bindingsForConfig('dataset-block', { datasetSource: src }));
+      expect(card, src).toContain(`"type":"${src}"`);
+      expect(card, src).toContain(SINGLE_ITEM_SOURCES[src].replace(/_list$/, '_general'));
+    }
+    // the guard is the flag, not "every new entity": brand still repeats
+    expect(() => bindingsForConfig('list-dataset', { datasetSource: 'brand' })).not.toThrow();
+  });
+
+  it('sb_add and sb_set both refuse a tag list', () => {
+    const d = emptyDoc();
+    expect(() => addSubtree(d, 'ROOT', { type: 'list-dataset', config: { datasetSource: 'productTag' } })).toThrow(/single-item source/);
+    const { patches, ids } = addSubtree(d, 'ROOT', { type: 'list-dataset', config: { datasetSource: 'product' } });
+    d.apply(patches);
+    expect(() => setKeys(d, ids[0], { datasetSource: 'blogTag' }, { namespace: 'config', base: true })).toThrow(/single-item source/);
   });
 });

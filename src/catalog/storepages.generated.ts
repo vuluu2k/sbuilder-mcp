@@ -6,18 +6,22 @@ export const STORE_SEED_SOURCE = {
     "product",
     "category",
     "search",
+    "complete",
     "blog",
     "post",
-    "complete",
+    "product-tag",
+    "blog-tag",
     "account"
   ],
   "nodes": {
     "product": 24,
     "category": 14,
     "search": 14,
+    "complete": 5,
     "blog": 13,
     "post": 6,
-    "complete": 5,
+    "product-tag": 14,
+    "blog-tag": 13,
     "account": 6
   }
 } as const;
@@ -1643,6 +1647,12 @@ export const PAGE_TYPES: readonly {
     "routePattern": "/brands/{slug}"
   },
   {
+    "type": "product-tag",
+    "group": "store",
+    "ownSlug": false,
+    "routePattern": "/product-tags/{slug}"
+  },
+  {
     "type": "record",
     "group": "store",
     "ownSlug": false
@@ -1682,6 +1692,12 @@ export const PAGE_TYPES: readonly {
     "group": "blog",
     "ownSlug": false,
     "routePattern": "/blog/{slug}"
+  },
+  {
+    "type": "blog-tag",
+    "group": "blog",
+    "ownSlug": false,
+    "routePattern": "/blog-tags/{slug}"
   },
   {
     "type": "error",
@@ -4372,6 +4388,162 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
       }
     }
   },
+  "complete": {
+    "schema_version": 2,
+    "root_node_id": "ROOT",
+    "nodes": {
+      "ROOT": {
+        "id": "ROOT",
+        "data": {
+          "type": "root",
+          "parent": null,
+          "nodes": [
+            "spcom_2"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {},
+        "config": {},
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "spcom_2": {
+        "id": "spcom_2",
+        "data": {
+          "type": "flex-section",
+          "parent": "ROOT",
+          "nodes": [
+            "spcom_3",
+            "spcom_4",
+            "spcom_5"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "width": "100%",
+          "height": "fit-content",
+          "alignItems": "center",
+          "gap": "16px",
+          "paddingTop": "64px",
+          "paddingBottom": "64px"
+        },
+        "config": {
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
+        "specials": {
+          "stylePreset": "container-section"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "spcom_3": {
+        "id": "spcom_3",
+        "data": {
+          "type": "heading",
+          "parent": "spcom_2",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "auto",
+          "height": "fit-content",
+          "textAlign": "center"
+        },
+        "config": {
+          "textGlobalStyle": "heading-1"
+        },
+        "specials": {
+          "htmlTag": "h2",
+          "text": "__SB_COMPLETION_HEADLINE__",
+          "stylePreset": "heading-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "spcom_4": {
+        "id": "spcom_4",
+        "data": {
+          "type": "payment-status",
+          "parent": "spcom_2",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "auto",
+          "maxWidth": "520px"
+        },
+        "config": {},
+        "specials": {
+          "paidTitle": "Thanh toán thành công",
+          "paidText": "Cảm ơn bạn! Chúng tôi đã nhận được thanh toán và đang xử lý đơn hàng.",
+          "pendingTitle": "Đang chờ xác nhận",
+          "pendingText": "Chúng tôi chưa nhận được xác nhận từ cổng thanh toán. Đơn hàng sẽ được cập nhật ngay khi có kết quả.",
+          "failedTitle": "Thanh toán chưa hoàn tất",
+          "failedText": "Giao dịch không thành công hoặc đã bị hủy. Bạn có thể thử lại.",
+          "retryLabel": "Thử lại",
+          "referenceLabel": "Mã giao dịch"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "spcom_5": {
+        "id": "spcom_5",
+        "data": {
+          "type": "order-receipt",
+          "parent": "spcom_2",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "auto",
+          "maxWidth": "520px"
+        },
+        "config": {},
+        "specials": {
+          "title": "Chi tiết đơn hàng",
+          "numberLabel": "Mã đơn hàng",
+          "placedLabel": "Ngày đặt",
+          "statusLabel": "Trạng thái",
+          "itemsLabel": "Sản phẩm",
+          "totalLabel": "Tổng cộng",
+          "dueLabel": "Còn phải trả",
+          "unavailableText": "Không tải được chi tiết đơn hàng. Bạn có thể tra cứu bằng mã đơn hàng trong trang tài khoản."
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      }
+    }
+  },
   "blog": {
     "schema_version": 2,
     "root_node_id": "ROOT",
@@ -5217,7 +5389,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
       }
     }
   },
-  "complete": {
+  "product-tag": {
     "schema_version": 2,
     "root_node_id": "ROOT",
     "nodes": {
@@ -5227,7 +5399,7 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "type": "root",
           "parent": null,
           "nodes": [
-            "spcom_2"
+            "sppro_14"
           ],
           "isCanvas": true,
           "hidden": false,
@@ -5240,15 +5412,680 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "events": [],
         "bindings": []
       },
-      "spcom_2": {
-        "id": "spcom_2",
+      "sppro_2": {
+        "id": "sppro_2",
+        "data": {
+          "type": "text-dataset",
+          "parent": "sppro_14",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "fontSize": "28px"
+        },
+        "config": {
+          "datasetSource": "productTag",
+          "kind": "title",
+          "recordField": "",
+          "recordFieldType": "",
+          "recordFormat": "",
+          "textValue": "",
+          "descriptionDisplayType": "Full",
+          "descriptionLines": 3,
+          "moreText": "Show more",
+          "lessText": "Show less",
+          "icon": true,
+          "moreButtonColor": "#000000",
+          "textGlobalStyle": "heading-3",
+          "clampTitle": false
+        },
+        "specials": {
+          "htmlTag": "h3",
+          "moreButtonEnabled": false,
+          "countFormat": "",
+          "stylePreset": "text-dataset-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-text",
+            "source": "productTag.title",
+            "field": "specials.boundText",
+            "target": {
+              "type": "productTag",
+              "id": "",
+              "kind": "title"
+            }
+          }
+        ]
+      },
+      "sppro_3": {
+        "id": "sppro_3",
+        "data": {
+          "type": "list-dataset",
+          "parent": "sppro_14",
+          "nodes": [
+            "sppro_4"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%",
+          "gap": "24px"
+        },
+        "config": {
+          "datasetSource": "product",
+          "articleSourceType": "category",
+          "loadingMode": "none",
+          "layout": "grid",
+          "quantity": 4,
+          "recordCollectionId": "",
+          "recordSortField": "",
+          "recordSortDesc": false,
+          "recordFilterField": "",
+          "recordFilterValue": "",
+          "recordRelationField": "",
+          "recordAggregates": [],
+          "itemsPerRow": 4,
+          "collectionType": "page_tag",
+          "collectionId": "all_products",
+          "articleCategoryId": "all_articles",
+          "collectionListType": "page_collections",
+          "listNavIcon": "ArrowLeftSLine",
+          "listNavPosition": "inside",
+          "listNavIconSize": 16,
+          "listNavIconColor": "#171717",
+          "listNavButtonWidth": 32,
+          "listNavButtonHeight": 32,
+          "listNavButtonBg": "#ffffff",
+          "paginationItemWidth": 8,
+          "paginationItemHeight": 8,
+          "paginationItemGap": 4,
+          "paginationItemBg": "rgba(0,0,0,0.25)",
+          "paginationItemActiveBg": "rgba(0,0,0,0.8)",
+          "paginationBg": "transparent",
+          "pagerAlign": "center",
+          "pagerSpacing": 24,
+          "pagerItemGap": 8,
+          "pagerItemWidth": 36,
+          "pagerItemHeight": 36,
+          "pagerItemBorderRadius": 8,
+          "pagerItemBg": "transparent",
+          "moreAlign": "center",
+          "moreSpacing": 24,
+          "moreHeight": 40,
+          "morePaddingX": 20,
+          "moreBorderRadius": 8,
+          "moreBg": "transparent",
+          "emptyStateId": "sppro_10"
+        },
+        "specials": {
+          "loadMoreLabel": "Load more",
+          "collectionIds": []
+        },
+        "responsive": {
+          "tablet": {
+            "style": {
+              "gap": "20px"
+            },
+            "config": {
+              "itemsPerRow": 2
+            }
+          },
+          "mobile": {
+            "style": {
+              "gap": "16px"
+            },
+            "config": {
+              "itemsPerRow": 1
+            }
+          }
+        },
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-target",
+            "source": "",
+            "field": "",
+            "target": {
+              "type": "product",
+              "id": "",
+              "kind": "product_list"
+            }
+          }
+        ]
+      },
+      "sppro_4": {
+        "id": "sppro_4",
+        "data": {
+          "type": "dataset-block",
+          "parent": "sppro_3",
+          "nodes": [
+            "sppro_5",
+            "sppro_8",
+            "sppro_9"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "24px",
+          "padding": "24px",
+          "backgroundColor": "#ffffff",
+          "width": "100%",
+          "height": "fit-content"
+        },
+        "config": {
+          "contentWidth": "fill_container",
+          "contentWidthCustom": 0,
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000",
+          "datasetSource": "product"
+        },
+        "specials": {},
+        "responsive": {
+          "tablet": {
+            "style": {
+              "padding": "20px",
+              "gap": "20px"
+            }
+          },
+          "mobile": {
+            "style": {
+              "padding": "16px",
+              "gap": "16px"
+            }
+          }
+        },
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-href",
+            "source": "product.url",
+            "field": "specials.boundHref",
+            "target": {
+              "type": "product",
+              "id": "",
+              "kind": "product_general"
+            }
+          },
+          {
+            "id": "bind-href-label",
+            "source": "product.title",
+            "field": "specials.boundHrefLabel"
+          }
+        ]
+      },
+      "sppro_5": {
+        "id": "sppro_5",
+        "data": {
+          "type": "media-dataset",
+          "parent": "sppro_4",
+          "nodes": [
+            "sppro_6",
+            "sppro_7"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%",
+          "overflow": "hidden"
+        },
+        "config": {
+          "images": [
+            {
+              "src": "",
+              "alt": ""
+            },
+            {
+              "src": "",
+              "alt": ""
+            },
+            {
+              "src": "",
+              "alt": ""
+            }
+          ],
+          "layout": "single",
+          "activeIndex": 0
+        },
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-image",
+            "source": "product.image",
+            "field": "specials.boundImage",
+            "target": {
+              "type": "product",
+              "id": "",
+              "kind": "media"
+            }
+          },
+          {
+            "id": "bind-images",
+            "source": "product.images",
+            "field": "specials.boundImages"
+          }
+        ]
+      },
+      "sppro_6": {
+        "id": "sppro_6",
+        "data": {
+          "type": "product-image-feature",
+          "parent": "sppro_5",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%",
+          "overflow": "hidden"
+        },
+        "config": {
+          "images": [
+            {
+              "src": "",
+              "alt": ""
+            },
+            {
+              "src": "",
+              "alt": ""
+            },
+            {
+              "src": "",
+              "alt": ""
+            }
+          ],
+          "activeIndex": 0,
+          "showNav": true,
+          "listNavPosition": "inside",
+          "listNavButtonWidth": 40,
+          "listNavButtonHeight": 40,
+          "listNavIconColor": "#000000",
+          "listNavButtonBg": "#ffffff",
+          "paginationBg": "rgba(0,0,0,0.20)",
+          "paginationItemBg": "rgba(255,255,255,0.40)",
+          "paginationItemActiveBg": "#FFFFFF",
+          "paginationItemWidth": 8,
+          "paginationItemHeight": 8,
+          "paginationItemGap": 4,
+          "featureClickAction": "open_gallery",
+          "hoverSwapImage": false,
+          "mainImageSource": "first_variant"
+        },
+        "specials": {
+          "alt": ""
+        },
+        "responsive": {
+          "tablet": {
+            "config": {
+              "listNavButtonWidth": 36,
+              "listNavButtonHeight": 36
+            }
+          },
+          "mobile": {
+            "config": {
+              "listNavButtonWidth": 32,
+              "listNavButtonHeight": 32
+            }
+          }
+        },
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-image",
+            "source": "product.image",
+            "field": "specials.boundImage",
+            "target": {
+              "type": "product",
+              "id": "",
+              "kind": "media"
+            }
+          },
+          {
+            "id": "bind-images",
+            "source": "product.images",
+            "field": "specials.boundImages"
+          },
+          {
+            "id": "bind-product-id",
+            "source": "product.id",
+            "field": "specials.boundProductId"
+          },
+          {
+            "id": "bind-product-url",
+            "source": "product.url",
+            "field": "specials.boundProductURL"
+          }
+        ]
+      },
+      "sppro_7": {
+        "id": "sppro_7",
+        "data": {
+          "type": "product-image-list",
+          "parent": "sppro_5",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%"
+        },
+        "config": {
+          "images": [
+            {
+              "src": "",
+              "alt": ""
+            },
+            {
+              "src": "",
+              "alt": ""
+            },
+            {
+              "src": "",
+              "alt": ""
+            }
+          ],
+          "activeIndex": 0,
+          "itemSize": 60,
+          "gap": 12,
+          "listItemImageRatio": "1 / 1",
+          "listNavButtonBg": "rgba(255,255,255,0.60)",
+          "listNavIconColor": "#000000"
+        },
+        "specials": {},
+        "responsive": {
+          "tablet": {
+            "config": {
+              "itemSize": 52
+            }
+          },
+          "mobile": {
+            "config": {
+              "itemSize": 44,
+              "gap": 8
+            }
+          }
+        },
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-images",
+            "source": "product.images",
+            "field": "specials.boundImages",
+            "target": {
+              "type": "product",
+              "id": "",
+              "kind": "media"
+            }
+          },
+          {
+            "id": "bind-product-id",
+            "source": "product.id",
+            "field": "specials.boundProductId"
+          }
+        ]
+      },
+      "sppro_8": {
+        "id": "sppro_8",
+        "data": {
+          "type": "text-dataset",
+          "parent": "sppro_4",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "fontSize": "20px"
+        },
+        "config": {
+          "datasetSource": "product",
+          "kind": "title",
+          "recordField": "",
+          "recordFieldType": "",
+          "recordFormat": "",
+          "textValue": "Product name",
+          "descriptionDisplayType": "Full",
+          "descriptionLines": 3,
+          "moreText": "Show more",
+          "lessText": "Show less",
+          "icon": true,
+          "moreButtonColor": "#000000",
+          "textGlobalStyle": "text-1"
+        },
+        "specials": {
+          "htmlTag": "h4",
+          "moreButtonEnabled": false,
+          "countFormat": "",
+          "stylePreset": "text-dataset-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-text",
+            "source": "product.title",
+            "field": "specials.boundText",
+            "target": {
+              "type": "product",
+              "id": "",
+              "kind": "title"
+            }
+          }
+        ]
+      },
+      "sppro_9": {
+        "id": "sppro_9",
+        "data": {
+          "type": "pricing-dataset",
+          "parent": "sppro_4",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "gap": "4px"
+        },
+        "config": {
+          "kind": "prices",
+          "priceValue": "$0.00",
+          "compareValue": "$0.00",
+          "displayPriceId": "both",
+          "textGlobalStyle": "text-1",
+          "compareColor": "#7b7b7b"
+        },
+        "specials": {
+          "htmlTag": "p"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-price",
+            "source": "product.price",
+            "field": "specials.boundPrice",
+            "target": {
+              "type": "product",
+              "id": "",
+              "kind": "prices"
+            }
+          },
+          {
+            "id": "bind-compare",
+            "source": "product.compareAtPrice",
+            "field": "specials.boundCompare"
+          },
+          {
+            "id": "bind-price-cents",
+            "source": "product.priceCents",
+            "field": "specials.boundPriceCents"
+          },
+          {
+            "id": "bind-compare-cents",
+            "source": "product.compareAtCents",
+            "field": "specials.boundCompareCents"
+          },
+          {
+            "id": "bind-price-mo",
+            "source": "product.moneyOverride",
+            "field": "specials.boundMoneyOverride"
+          },
+          {
+            "id": "bind-product-id",
+            "source": "product.id",
+            "field": "specials.boundProductId"
+          }
+        ]
+      },
+      "sppro_10": {
+        "id": "sppro_10",
+        "data": {
+          "type": "list-empty",
+          "parent": "sppro_3",
+          "nodes": [
+            "sppro_11",
+            "sppro_12",
+            "sppro_13"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "alignItems": "center",
+          "justifyContent": "center",
+          "gap": "12px",
+          "width": "100%",
+          "padding": "48px 24px 48px 24px"
+        },
+        "config": {},
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "sppro_11": {
+        "id": "sppro_11",
+        "data": {
+          "type": "icon",
+          "parent": "sppro_10",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "fit-content",
+          "height": "fit-content",
+          "color": "#d4d4d4"
+        },
+        "config": {
+          "iconSize": 32
+        },
+        "specials": {
+          "name": "ShoppingBag3Line",
+          "stylePreset": "icon-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "sppro_12": {
+        "id": "sppro_12",
+        "data": {
+          "type": "heading",
+          "parent": "sppro_10",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "auto",
+          "height": "fit-content",
+          "fontSize": "20px",
+          "fontWeight": "600",
+          "color": "#171717",
+          "textAlign": "center"
+        },
+        "config": {
+          "textGlobalStyle": "heading-1"
+        },
+        "specials": {
+          "htmlTag": "h3",
+          "text": "No products yet",
+          "stylePreset": "heading-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "sppro_13": {
+        "id": "sppro_13",
+        "data": {
+          "type": "text",
+          "parent": "sppro_10",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "auto",
+          "height": "fit-content",
+          "fontSize": "14px",
+          "color": "#737373",
+          "textAlign": "center"
+        },
+        "config": {
+          "textGlobalStyle": "text-1"
+        },
+        "specials": {
+          "htmlTag": "p",
+          "text": "New arrivals will show up here. Check back soon.",
+          "stylePreset": "text-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "sppro_14": {
+        "id": "sppro_14",
         "data": {
           "type": "flex-section",
           "parent": "ROOT",
           "nodes": [
-            "spcom_3",
-            "spcom_4",
-            "spcom_5"
+            "sppro_2",
+            "sppro_3"
           ],
           "isCanvas": true,
           "hidden": false,
@@ -5259,10 +6096,9 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
           "flexDirection": "column",
           "width": "100%",
           "height": "fit-content",
-          "alignItems": "center",
-          "gap": "16px",
-          "paddingTop": "64px",
-          "paddingBottom": "64px"
+          "gap": "24px",
+          "paddingTop": "48px",
+          "paddingBottom": "48px"
         },
         "config": {
           "backgroundSceneSource": "",
@@ -5285,12 +6121,499 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "responsive": {},
         "events": [],
         "bindings": []
+      }
+    }
+  },
+  "blog-tag": {
+    "schema_version": 2,
+    "root_node_id": "ROOT",
+    "nodes": {
+      "ROOT": {
+        "id": "ROOT",
+        "data": {
+          "type": "root",
+          "parent": null,
+          "nodes": [
+            "spblo_13"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {},
+        "config": {},
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
       },
-      "spcom_3": {
-        "id": "spcom_3",
+      "spblo_2": {
+        "id": "spblo_2",
+        "data": {
+          "type": "text-dataset",
+          "parent": "spblo_13",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "fontSize": "28px"
+        },
+        "config": {
+          "datasetSource": "blogTag",
+          "kind": "title",
+          "recordField": "",
+          "recordFieldType": "",
+          "recordFormat": "",
+          "textValue": "",
+          "descriptionDisplayType": "Full",
+          "descriptionLines": 3,
+          "moreText": "Show more",
+          "lessText": "Show less",
+          "icon": true,
+          "moreButtonColor": "#000000",
+          "textGlobalStyle": "heading-3",
+          "clampTitle": false
+        },
+        "specials": {
+          "htmlTag": "h3",
+          "moreButtonEnabled": false,
+          "countFormat": "",
+          "stylePreset": "text-dataset-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-text",
+            "source": "blogTag.title",
+            "field": "specials.boundText",
+            "target": {
+              "type": "blogTag",
+              "id": "",
+              "kind": "title"
+            }
+          }
+        ]
+      },
+      "spblo_3": {
+        "id": "spblo_3",
+        "data": {
+          "type": "list-dataset",
+          "parent": "spblo_13",
+          "nodes": [
+            "spblo_4"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%",
+          "gap": "24px"
+        },
+        "config": {
+          "datasetSource": "article",
+          "articleSourceType": "page_tag",
+          "loadingMode": "none",
+          "layout": "grid",
+          "quantity": 4,
+          "recordCollectionId": "",
+          "recordSortField": "",
+          "recordSortDesc": false,
+          "recordFilterField": "",
+          "recordFilterValue": "",
+          "recordRelationField": "",
+          "recordAggregates": [],
+          "itemsPerRow": 4,
+          "collectionType": "all_products",
+          "collectionId": "all_products",
+          "articleCategoryId": "all_articles",
+          "collectionListType": "page_collections",
+          "listNavIcon": "ArrowLeftSLine",
+          "listNavPosition": "inside",
+          "listNavIconSize": 16,
+          "listNavIconColor": "#171717",
+          "listNavButtonWidth": 32,
+          "listNavButtonHeight": 32,
+          "listNavButtonBg": "#ffffff",
+          "paginationItemWidth": 8,
+          "paginationItemHeight": 8,
+          "paginationItemGap": 4,
+          "paginationItemBg": "rgba(0,0,0,0.25)",
+          "paginationItemActiveBg": "rgba(0,0,0,0.8)",
+          "paginationBg": "transparent",
+          "pagerAlign": "center",
+          "pagerSpacing": 24,
+          "pagerItemGap": 8,
+          "pagerItemWidth": 36,
+          "pagerItemHeight": 36,
+          "pagerItemBorderRadius": 8,
+          "pagerItemBg": "transparent",
+          "moreAlign": "center",
+          "moreSpacing": 24,
+          "moreHeight": 40,
+          "morePaddingX": 20,
+          "moreBorderRadius": 8,
+          "moreBg": "transparent",
+          "emptyStateId": "spblo_9"
+        },
+        "specials": {
+          "loadMoreLabel": "Load more",
+          "collectionIds": []
+        },
+        "responsive": {
+          "tablet": {
+            "style": {
+              "gap": "20px"
+            },
+            "config": {
+              "itemsPerRow": 2
+            }
+          },
+          "mobile": {
+            "style": {
+              "gap": "16px"
+            },
+            "config": {
+              "itemsPerRow": 1
+            }
+          }
+        },
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-target",
+            "source": "",
+            "field": "",
+            "target": {
+              "type": "article",
+              "id": "",
+              "kind": "article_list"
+            }
+          }
+        ]
+      },
+      "spblo_4": {
+        "id": "spblo_4",
+        "data": {
+          "type": "dataset-block",
+          "parent": "spblo_3",
+          "nodes": [
+            "spblo_5",
+            "spblo_6",
+            "spblo_7",
+            "spblo_8"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "gap": "24px",
+          "padding": "24px",
+          "backgroundColor": "#ffffff",
+          "width": "100%",
+          "height": "fit-content"
+        },
+        "config": {
+          "contentWidth": "fill_container",
+          "contentWidthCustom": 0,
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000",
+          "datasetSource": "article"
+        },
+        "specials": {},
+        "responsive": {
+          "tablet": {
+            "style": {
+              "padding": "20px",
+              "gap": "20px"
+            }
+          },
+          "mobile": {
+            "style": {
+              "padding": "16px",
+              "gap": "16px"
+            }
+          }
+        },
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-href",
+            "source": "article.url",
+            "field": "specials.boundHref",
+            "target": {
+              "type": "article",
+              "id": "",
+              "kind": "article_general"
+            }
+          },
+          {
+            "id": "bind-href-label",
+            "source": "article.title",
+            "field": "specials.boundHrefLabel"
+          }
+        ]
+      },
+      "spblo_5": {
+        "id": "spblo_5",
+        "data": {
+          "type": "collection-media",
+          "parent": "spblo_4",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "100%",
+          "overflow": "hidden"
+        },
+        "config": {
+          "imageRatio": "auto",
+          "customImageRatioWidth": 16,
+          "customImageRatioHeight": 9,
+          "recordField": "",
+          "datasetSource": "article"
+        },
+        "specials": {
+          "src": "",
+          "alt": ""
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-image",
+            "source": "article.image",
+            "field": "specials.boundImage",
+            "target": {
+              "type": "article",
+              "id": "",
+              "kind": "media"
+            }
+          }
+        ]
+      },
+      "spblo_6": {
+        "id": "spblo_6",
+        "data": {
+          "type": "text-dataset",
+          "parent": "spblo_4",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "fontSize": "20px"
+        },
+        "config": {
+          "datasetSource": "article",
+          "kind": "title",
+          "recordField": "",
+          "recordFieldType": "",
+          "recordFormat": "",
+          "textValue": "Article title",
+          "descriptionDisplayType": "Full",
+          "descriptionLines": 3,
+          "moreText": "Show more",
+          "lessText": "Show less",
+          "icon": true,
+          "moreButtonColor": "#000000",
+          "textGlobalStyle": "text-1"
+        },
+        "specials": {
+          "htmlTag": "h4",
+          "moreButtonEnabled": false,
+          "countFormat": "",
+          "stylePreset": "text-dataset-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-text",
+            "source": "article.title",
+            "field": "specials.boundText",
+            "target": {
+              "type": "article",
+              "id": "",
+              "kind": "title"
+            }
+          }
+        ]
+      },
+      "spblo_7": {
+        "id": "spblo_7",
+        "data": {
+          "type": "text-dataset",
+          "parent": "spblo_4",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {},
+        "config": {
+          "datasetSource": "article",
+          "kind": "summary",
+          "recordField": "",
+          "recordFieldType": "",
+          "recordFormat": "",
+          "textValue": "Article summary",
+          "descriptionDisplayType": "Full",
+          "descriptionLines": 3,
+          "moreText": "Show more",
+          "lessText": "Show less",
+          "icon": true,
+          "moreButtonColor": "#000000",
+          "textGlobalStyle": "text-1"
+        },
+        "specials": {
+          "htmlTag": "p",
+          "moreButtonEnabled": false,
+          "countFormat": "",
+          "stylePreset": "text-dataset-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-text",
+            "source": "article.summary",
+            "field": "specials.boundText",
+            "target": {
+              "type": "article",
+              "id": "",
+              "kind": "summary"
+            }
+          }
+        ]
+      },
+      "spblo_8": {
+        "id": "spblo_8",
+        "data": {
+          "type": "text-dataset",
+          "parent": "spblo_4",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {},
+        "config": {
+          "datasetSource": "article",
+          "kind": "date",
+          "recordField": "",
+          "recordFieldType": "",
+          "recordFormat": "",
+          "textValue": "2026-08-13",
+          "descriptionDisplayType": "Full",
+          "descriptionLines": 3,
+          "moreText": "Show more",
+          "lessText": "Show less",
+          "icon": true,
+          "moreButtonColor": "#000000",
+          "textGlobalStyle": "text-1"
+        },
+        "specials": {
+          "htmlTag": "p",
+          "moreButtonEnabled": false,
+          "countFormat": "",
+          "stylePreset": "text-dataset-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": [
+          {
+            "id": "bind-text",
+            "source": "article.date",
+            "field": "specials.boundText",
+            "target": {
+              "type": "article",
+              "id": "",
+              "kind": "date"
+            }
+          }
+        ]
+      },
+      "spblo_9": {
+        "id": "spblo_9",
+        "data": {
+          "type": "list-empty",
+          "parent": "spblo_3",
+          "nodes": [
+            "spblo_10",
+            "spblo_11",
+            "spblo_12"
+          ],
+          "isCanvas": true,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "display": "flex",
+          "flexDirection": "column",
+          "alignItems": "center",
+          "justifyContent": "center",
+          "gap": "12px",
+          "width": "100%",
+          "padding": "48px 24px 48px 24px"
+        },
+        "config": {},
+        "specials": {},
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "spblo_10": {
+        "id": "spblo_10",
+        "data": {
+          "type": "icon",
+          "parent": "spblo_9",
+          "nodes": [],
+          "isCanvas": false,
+          "hidden": false,
+          "custom": {}
+        },
+        "style": {
+          "width": "fit-content",
+          "height": "fit-content",
+          "color": "#d4d4d4"
+        },
+        "config": {
+          "iconSize": 32
+        },
+        "specials": {
+          "name": "FileListLine",
+          "stylePreset": "icon-default"
+        },
+        "responsive": {},
+        "events": [],
+        "bindings": []
+      },
+      "spblo_11": {
+        "id": "spblo_11",
         "data": {
           "type": "heading",
-          "parent": "spcom_2",
+          "parent": "spblo_9",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -5299,25 +6622,28 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         "style": {
           "width": "auto",
           "height": "fit-content",
+          "fontSize": "20px",
+          "fontWeight": "600",
+          "color": "#171717",
           "textAlign": "center"
         },
         "config": {
           "textGlobalStyle": "heading-1"
         },
         "specials": {
-          "htmlTag": "h2",
-          "text": "__SB_COMPLETION_HEADLINE__",
+          "htmlTag": "h3",
+          "text": "No posts yet",
           "stylePreset": "heading-default"
         },
         "responsive": {},
         "events": [],
         "bindings": []
       },
-      "spcom_4": {
-        "id": "spcom_4",
+      "spblo_12": {
+        "id": "spblo_12",
         "data": {
-          "type": "payment-status",
-          "parent": "spcom_2",
+          "type": "text",
+          "parent": "spblo_9",
           "nodes": [],
           "isCanvas": false,
           "hidden": false,
@@ -5325,47 +6651,62 @@ export const STORE_PAGE_SEEDS: Record<string, { schema_version: number; root_nod
         },
         "style": {
           "width": "auto",
-          "maxWidth": "520px"
+          "height": "fit-content",
+          "fontSize": "14px",
+          "color": "#737373",
+          "textAlign": "center"
         },
-        "config": {},
+        "config": {
+          "textGlobalStyle": "text-1"
+        },
         "specials": {
-          "paidTitle": "Thanh toán thành công",
-          "paidText": "Cảm ơn bạn! Chúng tôi đã nhận được thanh toán và đang xử lý đơn hàng.",
-          "pendingTitle": "Đang chờ xác nhận",
-          "pendingText": "Chúng tôi chưa nhận được xác nhận từ cổng thanh toán. Đơn hàng sẽ được cập nhật ngay khi có kết quả.",
-          "failedTitle": "Thanh toán chưa hoàn tất",
-          "failedText": "Giao dịch không thành công hoặc đã bị hủy. Bạn có thể thử lại.",
-          "retryLabel": "Thử lại",
-          "referenceLabel": "Mã giao dịch"
+          "htmlTag": "p",
+          "text": "New stories will show up here. Check back soon.",
+          "stylePreset": "text-default"
         },
         "responsive": {},
         "events": [],
         "bindings": []
       },
-      "spcom_5": {
-        "id": "spcom_5",
+      "spblo_13": {
+        "id": "spblo_13",
         "data": {
-          "type": "order-receipt",
-          "parent": "spcom_2",
-          "nodes": [],
-          "isCanvas": false,
+          "type": "flex-section",
+          "parent": "ROOT",
+          "nodes": [
+            "spblo_2",
+            "spblo_3"
+          ],
+          "isCanvas": true,
           "hidden": false,
           "custom": {}
         },
         "style": {
-          "width": "auto",
-          "maxWidth": "520px"
+          "display": "flex",
+          "flexDirection": "column",
+          "width": "100%",
+          "height": "fit-content",
+          "gap": "24px",
+          "paddingTop": "48px",
+          "paddingBottom": "48px"
         },
-        "config": {},
+        "config": {
+          "backgroundSceneSource": "",
+          "backgroundSceneEffect": "gradient-mesh",
+          "backgroundSceneGallery": "podium",
+          "backgroundSceneSpeed": "normal",
+          "backgroundSceneIntensity": "normal",
+          "backgroundSceneColors": "theme",
+          "backgroundSceneColor1": "#171717",
+          "backgroundSceneColor2": "#ffffff",
+          "backgroundSceneColor3": "#6b7280",
+          "backgroundSceneUrl": "",
+          "backgroundSceneModelUrl": "",
+          "backgroundSceneVeil": 0,
+          "backgroundSceneVeilColor": "#000000"
+        },
         "specials": {
-          "title": "Chi tiết đơn hàng",
-          "numberLabel": "Mã đơn hàng",
-          "placedLabel": "Ngày đặt",
-          "statusLabel": "Trạng thái",
-          "itemsLabel": "Sản phẩm",
-          "totalLabel": "Tổng cộng",
-          "dueLabel": "Còn phải trả",
-          "unavailableText": "Không tải được chi tiết đơn hàng. Bạn có thể tra cứu bằng mã đơn hàng trong trang tài khoản."
+          "stylePreset": "container-section"
         },
         "responsive": {},
         "events": [],

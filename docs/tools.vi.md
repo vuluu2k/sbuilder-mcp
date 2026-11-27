@@ -1474,6 +1474,18 @@ và `/brands/khac` mỗi trang chỉ liệt kê đúng sản phẩm của mình.
 `brand.url` cũng bind được. Dựng xong RỒI mới publish: publish khi còn rỗng sẽ xoá gap
 `brandPage` của `sb_review` trong khi cả họ URL đang trả 500.
 
+**Trang tag** (`product-tag` ở `/product-tags/{slug}`, `blog-tag` ở `/blog-tags/{slug}`) cùng
+hình dạng, và platform CÓ seed sẵn: một tiêu đề bind `productTag.title` / `blogTag.title` cộng
+một dải đã thu hẹp theo đúng tag mà URL nêu tên — `list-dataset` sản phẩm với
+`config.collectionType: "page_tag"`, `list-dataset` bài viết với `config.articleSourceType:
+"page_tag"`. Ra khỏi các template đó, chính các list ấy hiện toàn bộ catalogue / toàn bộ blog.
+`{productTag,blogTag}.{title,description,image,url}` bind được. **Tag là nguồn MỘT BẢN GHI**:
+`config.datasetSource: "productTag"` / `"blogTag"` trên `list-dataset` bị từ chối (`sb_add` và
+`sb_set`) — không có feed danh sách nào đứng sau, và renderer Go sẽ liệt kê cả catalogue dưới tên
+tag. Bản ghi tag là `GET/POST /api/sites/{siteId}/product-tags` và `…/article-tags`
+(`{tags, total}`; 409 `duplicate_slug` / `duplicate_tag`, 400 khi tên trống); `GET …/blog-tags`
+vẫn là danh sách gợi ý tên. Giống `brand`, loại tag không phải loại link của menu.
+
 **Trang mới MANG CHROME CỦA SITE.** Trang tạo qua editor thì có sẵn header và footer của site;
 trang tạo ở đây thì không có gì cả — nên agent dựng site sẽ ra những trang không menu, không
 footer, trên một site có đủ cả hai, và không gì báo cả: `sb_review` đọc trang thì trang không
@@ -1574,7 +1586,7 @@ redact cùng `changes`, diff dạng `field: [trước, sau]`. Không nhận `typ
 việc của `sb_page_create`. Settings được publish nguyên văn, nên storefront chỉ thấy thay đổi
 sau `sb_publish`.
 
-**Trang template** (`product`, `category`, `post`, `blog`, `course`, `brand`) — PageAssignPanel của
+**Trang template** (`product`, `category`, `post`, `blog`, `course`, `brand`, `product-tag`, `blog-tag`) — PageAssignPanel của
 editor. `default_template: true` đặt trang này làm mặc định cho loại của nó (`PUT
 …/pages/{id}/default-template`); `render_for: [ids]` chuyển các entity đó sang hiển thị qua
 trang này, còn `render_default: [ids]` trả chúng về mặc định của loại (`POST
@@ -2963,7 +2975,7 @@ Editor đóng lỗ này ngay khi một node menu vừa đáp xuống (`editor/sr
    theo danh sách trang, `productCategory` → `/collections/{slug}`, `article` →
    `/blog/{slug}`, `blogCategory` → `/blog-categories/{slug}`, và `product` →
    `/products/{slug}` gom theo id, vì danh mục một shop thì không có trần còn cây category
-   thì có. `course` và `brand` có địa chỉ storefront nhưng KHÔNG phải loại link của menu —
+   thì có. `course`, `brand`, `productTag` và `blogTag` có địa chỉ storefront nhưng KHÔNG phải loại link của menu —
    `menus.LinkType.Valid()` từ chối chúng, nên hãy dùng một dòng `url`. Chỉ những loại mà các dòng thật sự tham chiếu mới được gọi. **Một listing không
    đọc được sẽ hạ loại đó xuống `href` rỗng chứ không huỷ cả lần đồng bộ** — resolver của
    chính editor cũng nuốt lỗi đúng như vậy.

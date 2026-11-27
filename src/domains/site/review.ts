@@ -300,7 +300,7 @@ function contrast(a: number[], b: number[]): number {
 // cartLine: only a cart-order's line row supplies it (render/nodes/cart-order,
 // scope.PlaceholderCartLine) — see ROW_SUPPLIER. searchRow is left out: no
 // element supplies it yet, so there is no right place to point at.
-const RECORD_ENTITIES = new Set(['product', 'category', 'course', 'article', 'blogCategory', 'brand', 'cartLine']);
+const RECORD_ENTITIES = new Set(['product', 'category', 'course', 'article', 'blogCategory', 'brand', 'productTag', 'blogTag', 'cartLine']);
 /** A record only one element type's rows supply, which is not a dataset repeater. */
 const ROW_SUPPLIER: Record<string, string> = { cartLine: 'cart-order' };
 /**
@@ -332,6 +332,9 @@ export const PAGE_ENTITIES: Record<string, string[]> = {
   blog: ['blogCategory', 'category'],
   // /brands/{slug} — the page supplies brandContext (web_builder f70fe86d1).
   brand: ['brand'],
+  // /product-tags/{slug}, /blog-tags/{slug} — pagerender/tagpage.go (web_builder 2819884c2).
+  'product-tag': ['productTag'],
+  'blog-tag': ['blogTag'],
 };
 
 /** Does this node or an ancestor PIN a record (`bindings[0].target.id`)? */

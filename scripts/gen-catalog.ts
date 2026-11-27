@@ -396,6 +396,30 @@ function readBindingSources(repo: string): string[] {
   for (const src of srcs) {
     for (const m of src.matchAll(KEY)) if (namespaces.has(m[1])) found.add(`${m[1]}.${m[2]}`);
   }
+  // A NAMESPACE-PARAMETERISED HELPER builds its keys at run time — Go
+  // `func tagContext(ns string, …)` returning `ns + ".title"`, TS `${ns}.title`
+  // — so KEY above never sees them, and `productTag.*` / `blogTag.*` were
+  // dropped without a word. Read each helper's fields off its body and the
+  // namespaces off its literal-first-argument call sites.
+  const helperFields = new Map<string, Set<string>>();
+  for (const src of srcs) {
+    for (const m of src.matchAll(/^(?:export )?func(?:tion)? ([A-Za-z]+)\((\w+)[: ][^\n]*\n([\s\S]*?)^\}/gm)) {
+      const [, name, param, body] = m;
+      const dyn = new RegExp(`(?:\\b${param} \\+ ["']\\.|\\$\\{${param}\\}\\.)([a-zA-Z]+)`, 'g');
+      const fields = [...body.matchAll(dyn)].map((f) => f[1]);
+      if (fields.length) helperFields.set(name, new Set([...(helperFields.get(name) ?? []), ...fields]));
+    }
+  }
+  for (const src of srcs) {
+    for (const [name, fields] of helperFields) {
+      for (const c of src.matchAll(new RegExp(`\\b${name}\\(\\s*['"]([a-zA-Z]+)['"]`, 'g'))) {
+        for (const f of fields) {
+          contextKeys.add(`${c[1]}.${f}`);
+          found.add(`${c[1]}.${f}`);
+        }
+      }
+    }
+  }
   // A key a context function returns that the result lacks means the readers
   // above disagree about the file's shape — exit rather than publish a list
   // that refuses a binding the renderer resolves.
@@ -1172,9 +1196,15 @@ export const API_DEFINITIONS: Record<string, unknown> = ${JSON.stringify(
   // here: a hand list missed `brand` and `review`, so a brand list built by
   // sb_add repeated PRODUCTS and a review card bound product.url.
   const entityMod = (await import(resolve(repo, 'schema/src/elements/datasetEntities.ts'))) as {
-    DATASET_ENTITIES: ReadonlyArray<{ id: string }>;
+    DATASET_ENTITIES: ReadonlyArray<{ id: string; listKind: string; repeatable?: false }>;
   };
   bindSources = entityMod.DATASET_ENTITIES.map((e) => e.id);
+  // `repeatable: false` = a SINGLE-ITEM source: no list feed backs its listKind,
+  // and Go's isProductList reads such a list as the whole catalogue. The
+  // factory still answers `<entity>_list` for it, so the refusal has to be data.
+  singleItem = Object.fromEntries(
+    entityMod.DATASET_ENTITIES.filter((e) => e.repeatable === false).map((e) => [e.id, e.listKind]),
+  );
   if (!bindSources.includes('brand') || !bindSources.includes('record')) {
     throw new Error('gen-catalog: DATASET_ENTITIES no longer lists brand/record — re-read datasetEntities.ts');
   }
@@ -3394,6 +3424,12 @@ export const ELEMENTS: Record<string, CatalogElement> = ${JSON.stringify(element
 
 export const BINDING_SOURCES: string[] = ${JSON.stringify(bindingSources, null, 2)};
 
+/**
+ * Dataset entities that are SINGLE-ITEM only (datasetEntities.ts \`repeatable: false\`),
+ * entity → the list kind nothing feeds. Never a list-dataset's datasetSource.
+ */
+export const SINGLE_ITEM_SOURCES: Record<string, string> = ${JSON.stringify(singleItem, null, 2)};
+
 /** Sources a context holds only when the entity has one (scripts/gen-catalog.ts readPresentOnlySources). */
 export const PRESENT_ONLY_SOURCES: string[] = ${JSON.stringify(presentOnly, null, 2)};
 
@@ -3869,7 +3905,24 @@ export type FormTemplateKey = keyof typeof FORM_TEMPLATES;
     PAGE_LAYOUT_IDS: readonly string[];
   };
   const HEADLINE_SENTINEL = '__SB_COMPLETION_HEADLINE__';
-  const STORE_TYPES = ['product', 'category', 'search', 'blog', 'post', 'complete'] as const;
+  // DERIVED, not listed: every declared page type the module seeds that is not a
+  // purpose LAYOUT (those land in PAGE_LAYOUT_SEEDS). A hand list of six missed
+  // `product-tag` and `blog-tag`, so sb_page_create opened them EMPTY — and an
+  // empty entity template 500s at every URL it serves.
+  const declaredTypes = [
+    ...(/export const PAGE_TYPES = \[([\s\S]*?)\] as const;/.exec(
+      readFileSync(resolve(repo, 'editor/src/features/pages/pageTypes.ts'), 'utf8'),
+    )?.[1] ?? '').matchAll(/'([a-zA-Z-]+)'/g),
+  ].map((m) => m[1]);
+  const STORE_TYPES = declaredTypes.filter(
+    (t) => storeSeedMod.hasStorePageSeed(t) && !storeSeedMod.PAGE_LAYOUT_IDS.includes(t),
+  );
+  for (const must of ['product', 'category', 'search', 'blog', 'post', 'complete']) {
+    if (!STORE_TYPES.includes(must)) {
+      console.error(`store page seeds: "${must}" is no longer seeded (derived ${STORE_TYPES.join(', ')}) — re-read storePageSeeds.ts`);
+      process.exit(1);
+    }
+  }
   const storeSeeds: Record<string, unknown> = {};
   for (const type of STORE_TYPES) {
     const doc = storeSeedMod.buildStorePageDocument(type, HEADLINE_SENTINEL);
@@ -3963,7 +4016,7 @@ export type FormTemplateKey = keyof typeof FORM_TEMPLATES;
       process.exit(1);
     }
     // meta(type, icon, group, ownSlug, routePattern?, servedRole?, app?)
-    const call = /meta\(\s*'([a-zA-Z]+)'\s*,\s*[A-Za-z0-9_]+\s*,\s*'([a-zA-Z]+)'\s*,\s*(true|false)\s*(?:,\s*([^,)]+))?\s*(?:,\s*([^,)]+))?\s*(?:,\s*([^,)]+))?\s*\)/g;
+    const call = /meta\(\s*'([a-zA-Z-]+)'\s*,\s*[A-Za-z0-9_]+\s*,\s*'([a-zA-Z]+)'\s*,\s*(true|false)\s*(?:,\s*([^,)]+))?\s*(?:,\s*([^,)]+))?\s*(?:,\s*([^,)]+))?\s*\)/g;
     const lit = (raw?: string): string | undefined => {
       const t = raw?.trim();
       if (!t || t === 'undefined') return undefined;
@@ -3984,7 +4037,7 @@ export type FormTemplateKey = keyof typeof FORM_TEMPLATES;
     // authority on detail. A mismatch means the regex fell behind the file's
     // spelling, and shipping the subset is how this drifted in the first place.
     const union = /export const PAGE_TYPES = \[([\s\S]*?)\] as const;/.exec(src);
-    const declared = union ? [...union[1].matchAll(/'([a-zA-Z]+)'/g)].map((m) => m[1]) : [];
+    const declared = union ? [...union[1].matchAll(/'([a-zA-Z-]+)'/g)].map((m) => m[1]) : [];
     const missing = declared.filter((t) => !pageTypes.some((p) => p.type === t));
     if (!declared.length || missing.length) {
       console.error(
@@ -3998,7 +4051,7 @@ export type FormTemplateKey = keyof typeof FORM_TEMPLATES;
     // editor's list must equal it — or a type Go accepts would be refused here.
     const goSrc = readFileSync(resolve(repo, 'server/internal/page/page.go'), 'utf8');
     const goList = /var PageTypes = \[\]string\{([^}]*)\}/.exec(goSrc);
-    const goTypes = goList ? [...goList[1].matchAll(/"([a-zA-Z]+)"/g)].map((m) => m[1]) : [];
+    const goTypes = goList ? [...goList[1].matchAll(/"([a-zA-Z-]+)"/g)].map((m) => m[1]) : [];
     const off = [
       ...goTypes.filter((t) => !pageTypes.some((p) => p.type === t)).map((t) => `${t} (server only)`),
       ...pageTypes.filter((p) => !goTypes.includes(p.type)).map((p) => `${p.type} (editor only)`),
@@ -5412,6 +5465,7 @@ function assertPageRoot(what: string, doc: { root_node_id?: string; nodes: Recor
 
 // Filled from DATASET_ENTITIES / datasetBindings.ts inside main(); declared above the call (TDZ).
 let bindSources: string[] = [];
+let singleItem: Record<string, string> = {};
 let bindKinds: string[] = [];
 const LEGACY_BIND_KINDS = [
   'title', 'vendor', 'description', 'summary', 'content', 'author', 'date',

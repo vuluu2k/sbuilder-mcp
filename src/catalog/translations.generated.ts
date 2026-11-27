@@ -4,8 +4,8 @@
 export const TRANSLATION_SOURCE = {
   "elements": 69,
   "pairs": 215,
-  "neverKeys": 201,
-  "entityTypes": 12
+  "neverKeys": 202,
+  "entityTypes": 14
 } as const;
 
 /** Every entity type a translation record can name, including "node". */
@@ -15,6 +15,8 @@ export const TRANSLATION_ENTITY_TYPES: string[] = [
   "article",
   "blogCategory",
   "brand",
+  "productTag",
+  "blogTag",
   "course",
   "courseSection",
   "courseLesson",
@@ -473,6 +475,7 @@ export const NEVER_TRANSLATED: string[] = [
   "formId",
   "formRules",
   "format",
+  "globalKind",
   "hideOnPage",
   "hideWhenEmpty",
   "homeDisplay",
@@ -1603,6 +1606,34 @@ export const TRANSLATABLE_ENTITY_FIELDS: Record<
     },
     {
       "key": "description"
+    }
+  ],
+  "productTag": [
+    {
+      "key": "title"
+    },
+    {
+      "key": "description"
+    },
+    {
+      "key": "seoTitle"
+    },
+    {
+      "key": "seoDescription"
+    }
+  ],
+  "blogTag": [
+    {
+      "key": "title"
+    },
+    {
+      "key": "description"
+    },
+    {
+      "key": "seoTitle"
+    },
+    {
+      "key": "seoDescription"
     }
   ],
   "course": [

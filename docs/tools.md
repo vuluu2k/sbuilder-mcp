@@ -1512,6 +1512,19 @@ then `sb_set` its `list-dataset` `config.collectionType: "page_brand"` (the bran
 and `/brands/khac` each listed only their own product. `brand.image` (the logo) and `brand.url` are bindable too. Build it, THEN
 publish: publishing it empty clears `sb_review`'s `brandPage` gap onto a URL family that 500s.
 
+**Tag pages** (`product-tag` at `/product-tags/{slug}`, `blog-tag` at `/blog-tags/{slug}`) are the
+same shape, and the platform DOES seed them: a title bound to `productTag.title` / `blogTag.title`
+plus a shelf already narrowed to the tag the URL names — a product `list-dataset` with
+`config.collectionType: "page_tag"`, an article `list-dataset` with `config.articleSourceType:
+"page_tag"`. Off those templates the same lists show the whole catalogue / the whole blog.
+`{productTag,blogTag}.{title,description,image,url}` are bindable. **A tag is a SINGLE-ITEM
+source**: `config.datasetSource: "productTag"` / `"blogTag"` on a `list-dataset` is refused
+(`sb_add` and `sb_set`) — no list feed backs it and the Go renderer would list the whole
+catalogue under the tag's name. The records themselves are `GET/POST /api/sites/{siteId}/product-tags`
+and `…/article-tags` (`{tags, total}`; 409 `duplicate_slug` / `duplicate_tag`, 400 on a blank
+name); `GET …/blog-tags` is still the distinct-name suggestion list. Like `brand`, tag kinds are
+not menu link kinds.
+
 **The new page WEARS THE SITE'S CHROME.** A page created through the editor carries the site's
 header and footer; one created here carried neither, so an agent building a site produced pages
 with no navigation and no footer on a site that has both — and nothing reported it, because
@@ -1608,7 +1621,7 @@ default) returns the redacted request plus `changes`, a `field: [before, after]`
 `type` is not taken: retyping a page is `sb_page_create` territory. Settings are published
 verbatim, so the storefront shows the change after `sb_publish`.
 
-**Template pages** (`product`, `category`, `post`, `blog`, `course`, `brand`) — the editor's
+**Template pages** (`product`, `category`, `post`, `blog`, `course`, `brand`, `product-tag`, `blog-tag`) — the editor's
 PageAssignPanel. `default_template: true` makes this page its type's default (`PUT
 …/pages/{id}/default-template`); `render_for: [ids]` moves those entities onto this page and
 `render_default: [ids]` returns them to the type default (`POST …/page-links/bulk`, link type
@@ -3029,8 +3042,8 @@ The editor closes this the moment a menu node lands (`editor/src/features/menus/
 3. **Resolve** each row's reference to the address the storefront actually serves: `page` off
    the page list, `productCategory` → `/collections/{slug}`, `article` → `/blog/{slug}`,
    `blogCategory` → `/blog-categories/{slug}`, and `product` → `/products/{slug}` batched by
-   id, because a shop's catalogue is unbounded while a category tree is not. `course` and
-   `brand` have storefront addresses but are NOT menu link kinds — `menus.LinkType.Valid()`
+   id, because a shop's catalogue is unbounded while a category tree is not. `course`,
+   `brand`, `productTag` and `blogTag` have storefront addresses but are NOT menu link kinds — `menus.LinkType.Valid()`
    refuses them, so link those through a `url` row. Only the kinds
    the rows actually reference are fetched. **A listing that cannot be reached degrades that
    kind to an empty `href` rather than aborting the sync** — the editor's own resolver
