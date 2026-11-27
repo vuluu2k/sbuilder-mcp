@@ -6,6 +6,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.117.0] - 2026-11-27
+
+### Added
+- Product-tag (`/product-tags/{slug}`) and blog-tag (`/blog-tags/{slug}`) pages open as pages like a brand, including seeded store pages for both tag types.
+- `sb_page_update` sets `render_for` and `default_template` on product-tag and blog-tag pages.
+
+### Changed
+- `sb_add` and `sb_set` refuse `productTag` and `blogTag` as a list-dataset `datasetSource`, because tags are single-item sources.
+- `sb_review` treats a tag page as supplying its own tag and reports a tag binding elsewhere as `no_data_context`.
+- `sb_publish` verification reads the product-tag and article-tag paths.
+- The blank tag page note names `page_tag` narrowing.
+- The bundled platform catalog is regenerated from web_builder v1.0.353.
+
 ## [0.116.0] - 2026-11-26
 
 ### Added

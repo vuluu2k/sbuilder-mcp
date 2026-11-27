@@ -6,6 +6,19 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.117.0] - 2026-11-27
+
+### Added
+- Các trang product-tag (`/product-tags/{slug}`) và blog-tag (`/blog-tags/{slug}`) mở được như trang thương hiệu, kèm trang cửa hàng seed sẵn cho cả hai loại tag.
+- `sb_page_update` đặt được `render_for` và `default_template` trên các trang product-tag và blog-tag.
+
+### Changed
+- `sb_add` và `sb_set` từ chối `productTag` và `blogTag` làm `datasetSource` của list-dataset, vì tag là nguồn một mục.
+- `sb_review` coi trang tag tự cung cấp tag của nó và báo binding tag ở nơi khác là `no_data_context`.
+- Bước xác minh của `sb_publish` đọc các đường dẫn product-tag và article-tag.
+- Ghi chú trang tag trống nêu rõ việc thu hẹp bằng `page_tag`.
+- Catalog nền tảng đi kèm được tạo lại từ web_builder v1.0.353.
+
 ## [0.116.0] - 2026-11-26
 
 ### Added
