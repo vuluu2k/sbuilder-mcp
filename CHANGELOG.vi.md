@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.117.1] - 2026-11-27
+
+### Changed
+- Catalog nền tảng đi kèm được tạo lại từ web_builder v1.0.359, nên 27 operation có lại summary và responses riêng của mình.
+
+### Fixed
+- `sb_api_find` không còn hiển thị summary dùng chung cho route refund, và các route domain action và refund có lại request body.
+
 ## [0.117.0] - 2026-11-27
 
 ### Added
