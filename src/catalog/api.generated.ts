@@ -3,10 +3,10 @@
 import type { ApiOperation } from './types.js';
 
 export const SWAGGER_SOURCE = {
-  "operations": 1026,
-  "definitions": 455,
+  "operations": 1030,
+  "definitions": 457,
   "bodyCarrying": 487,
-  "bodyUndescribed": 118,
+  "bodyUndescribed": 117,
   "generatedFrom": "server/docs/swagger.json"
 } as const;
 
@@ -2254,6 +2254,32 @@ export const API_OPERATIONS: ApiOperation[] = [
       "admin"
     ],
     "summary": "Download the plan import Excel template",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/admin/plans/terms",
+    "method": "GET",
+    "path": "/api/admin/plans/terms",
+    "tags": [
+      "admin"
+    ],
+    "summary": "List the plan term discounts",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
+    "id": "put:/api/admin/plans/terms",
+    "method": "PUT",
+    "path": "/api/admin/plans/terms",
+    "tags": [
+      "admin"
+    ],
+    "summary": "Set the plan term discounts",
     "params": [],
     "bodyDescribed": false,
     "bodyRef": null,
@@ -4766,6 +4792,19 @@ export const API_OPERATIONS: ApiOperation[] = [
     "credential": "siteScoped"
   },
   {
+    "id": "get:/api/plans/terms",
+    "method": "GET",
+    "path": "/api/plans/terms",
+    "tags": [
+      "plans"
+    ],
+    "summary": "The term lengths a plan can be bought for, with their discounts",
+    "params": [],
+    "bodyDescribed": false,
+    "bodyRef": null,
+    "credential": "siteScoped"
+  },
+  {
     "id": "post:/api/pos-devices/events",
     "method": "POST",
     "path": "/api/pos-devices/events",
@@ -5036,7 +5075,7 @@ export const API_OPERATIONS: ApiOperation[] = [
     "tags": [
       "plans"
     ],
-    "summary": "Buy a plan — issues an unpaid invoice with a payment code",
+    "summary": "Buy a plan term — issues an unpaid invoice with a payment code",
     "params": [
       {
         "name": "id",
@@ -5050,7 +5089,42 @@ export const API_OPERATIONS: ApiOperation[] = [
         "in": "body",
         "required": true,
         "type": "object",
-        "description": "{planId}"
+        "description": "{planId, months}"
+      }
+    ],
+    "bodyDescribed": true,
+    "bodyRef": "internal_plans_rest.checkoutBody",
+    "credential": "siteScoped"
+  },
+  {
+    "id": "get:/api/sites/{id}/plan-checkout/quote",
+    "method": "GET",
+    "path": "/api/sites/{id}/plan-checkout/quote",
+    "tags": [
+      "plans"
+    ],
+    "summary": "Price a plan term (gross, credit from the current plan, amount to pay)",
+    "params": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "string",
+        "description": "site id"
+      },
+      {
+        "name": "planId",
+        "in": "query",
+        "required": true,
+        "type": "string",
+        "description": "plan id"
+      },
+      {
+        "name": "months",
+        "in": "query",
+        "required": true,
+        "type": "integer",
+        "description": "term length"
       }
     ],
     "bodyDescribed": false,
@@ -33825,6 +33899,32 @@ export const API_DEFINITIONS: Record<string, unknown> = {
       }
     }
   },
+  "github_com_webbuilder_server_internal_plans.Quote": {
+    "type": "object",
+    "properties": {
+      "amountCents": {
+        "type": "integer"
+      },
+      "creditCents": {
+        "type": "integer"
+      },
+      "creditFromSubId": {
+        "type": "string"
+      },
+      "currency": {
+        "type": "string"
+      },
+      "grossCents": {
+        "type": "integer"
+      },
+      "months": {
+        "type": "integer"
+      },
+      "planId": {
+        "type": "string"
+      }
+    }
+  },
   "github_com_webbuilder_server_internal_platformadmin.AIFreeCreditsView": {
     "type": "object",
     "properties": {
@@ -39959,6 +40059,24 @@ export const API_DEFINITIONS: Record<string, unknown> = {
     "type": "object",
     "properties": {
       "note": {
+        "type": "string"
+      }
+    }
+  },
+  "internal_plans_rest.checkoutBody": {
+    "type": "object",
+    "properties": {
+      "months": {
+        "type": "integer",
+        "enum": [
+          1,
+          3,
+          6,
+          12,
+          24
+        ]
+      },
+      "planId": {
         "type": "string"
       }
     }

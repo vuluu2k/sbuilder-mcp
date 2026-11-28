@@ -4,12 +4,12 @@
 import type { RequestShape } from './types.js';
 
 export const SHAPE_SOURCE = {
-  "writeOperations": 472,
-  "shaped": 379,
-  "fromHandlers": 368,
+  "writeOperations": 473,
+  "shaped": 380,
+  "fromHandlers": 369,
   "fromSwaggerOnly": 11,
   "withReadOnly": 31,
-  "structsRead": 3954
+  "structsRead": 3973
 } as const;
 
 export const REQUEST_SHAPES: Record<string, RequestShape> = {
@@ -7254,10 +7254,14 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
       {
         "name": "planId",
         "type": "string"
+      },
+      {
+        "name": "months",
+        "type": "number | null"
       }
     ],
     "source": "go",
-    "goType": "(inline)"
+    "goType": "checkoutBody"
   },
   "post:/api/sites/{siteId}/subscription": {
     "fields": [
@@ -7463,6 +7467,16 @@ export const REQUEST_SHAPES: Record<string, RequestShape> = {
         "name": "monthlyCalls",
         "type": "number | null",
         "note": "A POINTER so \"absent\" is distinguishable from \"zero\"."
+      }
+    ],
+    "source": "go",
+    "goType": "(inline)"
+  },
+  "put:/api/admin/plans/terms": {
+    "fields": [
+      {
+        "name": "terms",
+        "type": "platformadmin.TermDiscountView[]"
       }
     ],
     "source": "go",
