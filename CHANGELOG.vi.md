@@ -6,6 +6,14 @@ Mọi thay đổi đáng chú ý của dự án được ghi lại trong file n�
 Định dạng dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 và dự án tuân theo [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.118.0] - 2026-11-28
+
+### Added
+- Catalog nền tảng đi kèm được tạo lại từ web_builder v1.0.368, nên `sb_api_find` liệt kê chiết khấu theo kỳ hạn gói (`GET /api/plans/terms`, `GET` và `PUT /api/admin/plans/terms`) và báo giá thanh toán gói (`GET /api/sites/{id}/plan-checkout/quote`), tính giá kỳ hạn gồm số tiền gốc, khoản tín dụng từ gói hiện tại và số tiền phải trả.
+
+### Changed
+- Operation thanh toán gói giờ mô tả và ghi rõ độ dài kỳ hạn `months` trong request body, nên gói được mua theo kỳ hạn thay vì chỉ có `planId`.
+
 ## [0.117.2] - 2026-11-27
 
 ### Changed

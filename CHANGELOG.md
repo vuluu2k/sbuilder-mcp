@@ -6,6 +6,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.118.0] - 2026-11-28
+
+### Added
+- The bundled platform catalog is regenerated from web_builder v1.0.368, so `sb_api_find` lists plan term discounts (`GET /api/plans/terms`, `GET` and `PUT /api/admin/plans/terms`) and the plan checkout quote (`GET /api/sites/{id}/plan-checkout/quote`), which prices a term with its gross amount, credit from the current plan and amount to pay.
+
+### Changed
+- The plan checkout operation now describes and documents a `months` term length in its request body, so a plan is bought for a term instead of a bare `planId`.
+
 ## [0.117.2] - 2026-11-27
 
 ### Changed
